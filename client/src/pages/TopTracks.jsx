@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Track from '../components/Track';
 
 const TopTracks = () => {
   const [tracks, setTracks] = useState([]);
@@ -17,17 +18,14 @@ const TopTracks = () => {
   }, []);
 
   return (
-    <div>
-      <h2>Your Top Tracks</h2>
-      <ul>
-        {tracks.map(track => (
-          <li key={track.id}>
-            <img src={track.album.images[0]?.url} alt={track.name} width="150" />
-            {track.name} by {track.artists.map(a => a.name).join(', ')}
-          </li>
+    <>
+      <h2 className='text-center font-bold text-4xl my-10'>Your Top Tracks</h2>
+      <ul className='px-60'>
+        {tracks.map((track, idx) => (
+          <Track key={track.id} index={idx + 1} item={track} size={'150'} />
         ))}
       </ul>
-    </div>
+    </>
   );
 }
 

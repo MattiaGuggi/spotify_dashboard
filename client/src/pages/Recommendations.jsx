@@ -17,8 +17,8 @@ const Recommendations = () => {
   }, []);
 
   return (
-    <div>
-      <h2>Recommended Tracks</h2>
+    <>
+      <h2 className='p-14'>Recommended Tracks</h2>
       <ul>
         {recs.map(track => (
           <li key={track.id}>
@@ -26,7 +26,7 @@ const Recommendations = () => {
           </li>
         ))}
       </ul>
-    </div>
+    </>
   );
 }
 
