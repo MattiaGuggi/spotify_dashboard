@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Track from '../components/Track'
 
-const Recommendations = () => {
+const Recommendations = ({ token }) => {
   const [recs, setRecs] = useState([]);
 
   useEffect(() => {
@@ -14,16 +15,16 @@ const Recommendations = () => {
       }
     };
     fetchRecommendations();
+    console.log(token);
+    
   }, []);
 
   return (
     <>
-      <h2 className='p-14'>Recommended Tracks</h2>
-      <ul>
-        {recs.map(track => (
-          <li key={track.id}>
-            {track.name} by {track.artists.map(a => a.name).join(', ')}
-          </li>
+      <h2 className='text-center font-bold text-4xl mt-20 mb-14'>Recommended Tracks</h2>
+      <ul className='px-60'>
+        {recs.map((track, idx) => (
+          <Track key={track.track.id} index={idx} item={track.track} size={'150'} />
         ))}
       </ul>
     </>

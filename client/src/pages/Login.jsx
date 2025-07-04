@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Home from './Home'
 
-const Login = () => {
+const Login = ({ setToken }) => {
   const [accessToken, setAccessToken] = useState(null);
 
   useEffect(() => {
@@ -37,6 +37,7 @@ const Login = () => {
   };
 
   if (accessToken) {
+    setToken(accessToken);
     return <Home />
   }
 
