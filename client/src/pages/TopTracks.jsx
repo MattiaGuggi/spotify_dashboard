@@ -18,15 +18,15 @@ const TopTracks = () => {
   }, []);
 
   return (
-    <>
-      <h2 className='text-center font-bold text-4xl my-10'>Your Top Tracks</h2>
-      <ul className='px-60'>
+    <div className="pt-24 px-10">
+      <h2 className="text-white text-3xl font-bold mb-8 text-center">Your Top Tracks</h2>
+      <ul className="flex flex-col gap-8 items-center">
         {tracks.map((track, idx) => (
-          <Track key={track.id} index={idx + 1} item={track} size={'150'} />
+          <Track key={track.id} index={idx + 1} item={track} size="100" />
         ))}
       </ul>
-    </>
+    </div>
   );
-}
+};
 
 export default TopTracks;

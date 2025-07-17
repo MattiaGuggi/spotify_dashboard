@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Track from '../components/Track'
 import Loader from '../components/Loader';
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Playlists = () => {
   const [playlists, setPlaylists] = useState([]);
@@ -57,9 +62,35 @@ const Playlists = () => {
     fetchTracks();
   }, [selectedPlaylistId]);
 
+  useGSAP(() => {
+    const tracks = gsap.utils.toArray("ul li");
+
+    tracks.forEach((track) => {
+      gsap.fromTo(track,
+        {
+          opacity: 0,
+          scale: 0.8,
+          y: 80,
+        },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: track,
+            start: "top 95%",
+            end: "bottom 80%",
+            scrub: 0.5,
+          },
+        }
+      );
+    });
+  }, []);
+
   return (
     <div className='flex flex-col items-center'>
-      <h2 className='text-center font-bold text-4xl mt-20 mb-14'>Your Playlists</h2>
+      <h2 className='text-center text-white font-bold text-4xl mt-20 mb-14'>Your Playlists</h2>
       <select
         onChange={(e) => setSelectedPlaylistId(e.target.value)}
         value={selectedPlaylistId || ''}
@@ -92,34 +123,35 @@ const Playlists = () => {
         <p className='my-7'>No tracks available</p>
       )}
 
-      <form onSubmit={moveTracks} className='fixed flex flex-col gap-8 top-1/2 right-52 bg-gradient-to-tl from-green-300 to-emerald-500 py-12 px-9 rounded-xl'>
-        <div className="input-wrapper">
+      <form
+        onSubmit={moveTracks}
+        className="fixed right-12 top-1/2 -translate-y-1/2 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
+      >
+        <h3 className="text-white text-xl font-bold mb-6">Reorder Tracks</h3>
+        <div className="flex flex-col gap-4 mb-6">
           <input
             type="number"
             name="origin"
-            placeholder="Origin track index"
+            placeholder="Origin index"
             min={0}
             max={tracks.length - 1}
             required
-            className="bg-[#eee] border-none p-4 text-base w-52 rounded-xl text-lightcoral shadow-[0_0.4rem_#dfd9d9] cursor-pointer focus:outline-lightcoral"
+            className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
           />
-        </div>
-        <div className="input-wrapper">
           <input
             type="number"
             name="destination"
-            placeholder="Destination track index"
+            placeholder="Destination index"
             min={0}
             max={tracks.length}
             required
-            className="bg-[#eee] border-none p-4 text-base w-52 rounded-xl text-lightcoral shadow-[0_0.4rem_#dfd9d9] cursor-pointer focus:outline-lightcoral"
+            className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
           />
         </div>
-        <input type="submit" value="Confirm!" className="relative text-[17px] uppercase no-underline px-10 py-4 inline-block
-          cursor-pointer rounded-full transition-all duration-200 border-none font-medium text-black bg-white hover:-translate-y-1
-          hover:shadow-[0_10px_20px_rgba(0,0,0,0.2)] active:-translate-y-0.5 active:shadow-[0_5px_10px_rgba(0,0,0,0.2)] after:content-['']
-          after:inline-block after:h-full after:w-full after:rounded-full after:absolute after:top-0 after:left-0 after:-z-10 after:bg-white
-          after:transition-all after:duration-400 hover:after:scale-x-140 hover:after:scale-y-160 hover:after:opacity-0"
+        <input
+          type="submit"
+          value="Confirm!"
+          className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 transition"
         />
       </form>
     </div>

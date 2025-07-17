@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Login from './pages/Login';
 import TopTracks from './pages/TopTracks';
-import Recommendations from './pages/Recommendations';
 import Playlists from './pages/Playlists';
 import Navbar from './components/Navbar';
 import { UserProvider } from './components/UserContext';
@@ -27,7 +26,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Login setToken={setToken} />} />
             <Route path="/top-tracks" element={<TopTracks />} />
-            <Route path="/recommendations" element={<Recommendations token={token} />} />
             <Route path="/playlists" element={<Playlists />} />
           </Routes>
         </div>
