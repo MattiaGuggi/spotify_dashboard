@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const Home = () => {
+const Home = ({ setSelectedPlaylist }) => {
+  const navigate = useNavigate();
   const [playlists, setPlaylists] = useState([]);
   const [user, setUser] = useState(null);
 
@@ -16,6 +18,11 @@ const Home = () => {
     } catch (error) {
       console.error('Failed to fetch data', error);
     }
+  };
+
+  const handleClick = (playlist) => {
+    setSelectedPlaylist(playlist);
+    navigate('/playlists');
   };
 
   useEffect(() => {
@@ -44,6 +51,7 @@ const Home = () => {
           <div
             key={idx}
             className="group cursor-pointer bg-white/5 p-4 rounded-xl shadow-lg hover:bg-emerald-600/20 transition-all duration-300"
+            onClick={() => handleClick(playlist)}
           >
             <img
               src={playlist.images[0].url}

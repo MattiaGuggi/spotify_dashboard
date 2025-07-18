@@ -3,6 +3,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from flask_cors import CORS
 from dotenv import load_dotenv
+import numpy as np
 import os
 import random
 

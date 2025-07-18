@@ -8,7 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Playlists = () => {
+const Playlists = (selectedPlaylist) => {
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState('');
   const [tracks, setTracks] = useState([]);
@@ -53,6 +53,7 @@ const Playlists = () => {
   // Fetch playlists once on mount
   useEffect(() => {
     fetchPlaylists();
+    setSelectedPlaylistId(selectedPlaylist?.selectedPlaylist?.id);
   }, []);
 
   // Fetch tracks whenever selectedPlaylistId changes or tracks have been moved
@@ -135,13 +136,12 @@ const Playlists = () => {
       ) : tracks.length > 0 ? (
         <ul className='px-60'>
           {tracks.map((trackItem, idx) => (
-            <Track key={trackItem.track.id} index={idx} item={trackItem.track} size={'150'} />
+            <Track key={`${trackItem.track.id}-${idx}`} index={idx} item={trackItem.track} size={'150'} />
           ))}
         </ul>
       ) : (
         <p className='my-7'>No tracks available</p>
       )}
-
       <form
         onSubmit={moveTracks}
         className="fixed right-12 top-1/2 -translate-y-1/2 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
