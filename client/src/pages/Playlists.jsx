@@ -94,11 +94,30 @@ const Playlists = () => {
       <select
         onChange={(e) => setSelectedPlaylistId(e.target.value)}
         value={selectedPlaylistId || ''}
-        className='px-6 py-3 rounded-xl shadow-custom'
+        className='
+          px-6 py-3 
+          rounded-xl 
+          shadow-lg 
+          bg-[#121212] 
+          text-white 
+          border border-gray-700 
+          focus:outline-none 
+          focus:ring-2 
+          focus:ring-emerald-500 
+          focus:border-transparent
+          appearance-none
+          cursor-pointer
+        '
       >
-        <option value="" disabled>Select a playlist</option>
+        <option value="" disabled className='bg-[#121212] text-white'>
+          Select a playlist
+        </option>
         {playlists.map(playlist => (
-          <option key={playlist.id} value={playlist.id}>
+          <option 
+            key={playlist.id} 
+            value={playlist.id} 
+            className='bg-[#121212] text-white'
+          >
             {playlist.name}
           </option>
         ))}
@@ -151,7 +170,7 @@ const Playlists = () => {
         <input
           type="submit"
           value="Confirm!"
-          className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 transition"
+          className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
         />
       </form>
     </div>

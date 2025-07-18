@@ -21,8 +21,7 @@ function App() {
     <UserProvider>
       <Router>
         <Navbar />
-        <div className='relative w-full min-h-screen pt-16 text-center flex justify-center items-center flex-col
-          overflow-hidden bg-gradient-to-br from-emerald-300 via-green-400 to bg-emerald-800'>
+        <div className="relative w-full min-h-screen pt-16 text-white font-sans bg-gradient-to-br from-[#121212] via-[#1DB954]/20 to-[#191414]">
           <Routes>
             <Route path="/" element={<Login setToken={setToken} />} />
             <Route path="/top-tracks" element={<TopTracks />} />
