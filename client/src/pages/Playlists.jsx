@@ -12,6 +12,7 @@ const Playlists = (selectedPlaylist) => {
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState('');
   const [tracks, setTracks] = useState([]);
+  const [selectedTracks, setSelectedTracks] = useState([]);
   const [message, setMessage] = useState('');
   const [loadingTracks, setLoadingTracks] = useState(false);
 
@@ -47,6 +48,41 @@ const Playlists = (selectedPlaylist) => {
         fetchTracks();
     } catch(err) {
       console.error('Failed to move tracks', err);
+    }
+  };
+
+  // Toggle track selection
+  const toggleTrackSelection = (index) => {
+    setSelectedTracks((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
+
+  const moveGroupTracks = async (e) => {
+    e.preventDefault();
+    if (selectedTracks.length === 0) {
+      setMessage("Please select at least one track.");
+      return;
+    }
+
+    try {
+      const first_new_position = Number(e.target.first_new_position.value);
+      const sortedSelected = [...selectedTracks].sort((a, b) => a - b); // ensure order
+      const first_old_position = sortedSelected[0];
+      const group_tracks = sortedSelected.map((i) => tracks[i].track);
+
+      const response = await axios.post(
+        `http://localhost:5000/playlists/${selectedPlaylistId}/moveGroupTracks`,
+        { first_new_position, first_old_position, group_tracks },
+        { withCredentials: true }
+      );
+
+      setMessage(response.data);
+      setSelectedTracks([]); // reset selection
+      fetchTracks();
+      e.target.first_new_position.value = '';
+    } catch (err) {
+      console.error('Failed to move group of tracks', err);
     }
   };
 
@@ -136,7 +172,7 @@ const Playlists = (selectedPlaylist) => {
       ) : tracks.length > 0 ? (
         <ul className='px-60'>
           {tracks.map((trackItem, idx) => (
-            <Track key={`${trackItem.track.id}-${idx}`} index={idx} item={trackItem.track} size={'150'} />
+            <Track key={`${trackItem.track.id}-${idx}`} index={idx} item={trackItem.track} size={'150'} selectedTracks={selectedTracks} toggleTrackSelection={toggleTrackSelection} />
           ))}
         </ul>
       ) : (
@@ -170,6 +206,30 @@ const Playlists = (selectedPlaylist) => {
         <input
           type="submit"
           value="Confirm!"
+          className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
+        />
+      </form>
+      <form
+        onSubmit={moveGroupTracks}
+        className="fixed right-12 bottom-12 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
+      >
+        <h3 className="text-white text-xl font-bold mb-6">Move Group</h3>
+        
+        <div className="flex flex-col gap-4 mb-6">
+          <input
+            type="number"
+            name="first_new_position"
+            placeholder="New starting index"
+            min={0}
+            max={tracks.length}
+            required
+            className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
+          />
+        </div>
+
+        <input
+          type="submit"
+          value="Move Group"
           className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
         />
       </form>

@@ -108,6 +108,27 @@ def move_tracks(playlist_id):
         return jsonify('Tracks moved successfully!')
     except spotipy.exceptions.SpotifyException as e:
         return jsonify('Failed to move tracks!', e)
+    
+@app.route('/playlists/<playlist_id>/moveGroupTracks', methods=['POST'])
+def move_group_tracks(playlist_id):
+    data = request.json
+    first_new_position = data.get('first_new_position') # The position where to "fit" the group of tracks
+    first_old_position = data.get('first_old_position') # The first position of the whole group of tracks
+    group_tracks = data.get('group_tracks') # All the tracks
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+
+    try:
+        sp.playlist_reorder_items(
+            playlist_id,
+            range_start=first_old_position,
+            range_length=len(group_tracks),
+            insert_before=first_new_position
+        )
+
+        return jsonify('Track moved successfully')
+    except spotipy.exceptions.SpotifyException as e:
+        print(e)
+        return jsonify(f'Failed to move group tracks: {str(e)}'), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
