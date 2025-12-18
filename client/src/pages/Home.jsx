@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../components/UserContext';
 
 const Home = ({ setSelectedPlaylist }) => {
   const navigate = useNavigate();
   const [playlists, setPlaylists] = useState([]);
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useUser();
 
   const fetchData = async () => {
     try {

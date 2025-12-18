@@ -5,6 +5,7 @@ import TopTracks from './pages/TopTracks';
 import Playlists from './pages/Playlists';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import Settings from './pages/Settings';
 import { UserProvider } from './components/UserContext';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path="/" element={<Home setSelectedPlaylist={setSelectedPlaylist} />} />
             <Route path="/top-tracks" element={<TopTracks />} />
             <Route path="/playlists" element={<Playlists selectedPlaylist={selectedPlaylist} />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
       </Router>

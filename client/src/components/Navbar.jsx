@@ -5,6 +5,7 @@ const navItems = [
   { label: 'Home', path: '' },
   { label: 'Top Tracks', path: 'top-tracks' },
   { label: 'Playlists', path: 'playlists' },
+  { label: 'Settings', path: 'settings' },
 ];
 
 const Navbar = () => {

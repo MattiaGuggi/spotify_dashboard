@@ -3,9 +3,11 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from flask_cors import CORS
 from dotenv import load_dotenv
-import numpy as np
 import os
 import random
+import requests
+import re
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -16,6 +18,8 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 REDIRECT_URI = os.getenv('REDIRECT_URI')
 SCOPE = "user-top-read playlist-read-private playlist-modify-private playlist-modify-public"
+GENIUS_API_KEY = os.getenv('GENIUS_API_KEY')
+GENIUS_CLIENT_ACCESS_TOKEN = os.getenv('GENIUS_CLIENT_ACCESS_TOKEN')
 
 auth_manager = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope=SCOPE, cache_path=".cache")
 
@@ -129,6 +133,52 @@ def move_group_tracks(playlist_id):
     except spotipy.exceptions.SpotifyException as e:
         print(e)
         return jsonify(f'Failed to move group tracks: {str(e)}'), 500
+
+@app.route("/lyrics", methods=["GET"])
+def display_lyrics():
+    track = request.args.get("track")
+    artist = request.args.get("artist")
+
+    if not track or not artist:
+        return jsonify({"error": "Missing track or artist"}), 400
+    
+    query = f"{track} {artist}"
+
+    res = requests.get("https://api.genius.com/search",
+        params={"q": query},
+        headers={"Authorization": f"Bearer {GENIUS_CLIENT_ACCESS_TOKEN}"}
+    ).json()
+
+    hits = res["response"]["hits"]
+
+    if not hits:
+        return None
+
+    data = hits[0]["result"]
+
+    song = {
+        "id": data["id"],
+        "title": data["title"],
+        "url": data["url"],
+        "artist": data["primary_artist"]["name"]
+    }
+
+    if not song:
+        return jsonify({"error": "Song not found on Genius"}), 404
+
+    page = requests.get(song["url"])
+    soup = BeautifulSoup(page.text, "html.parser")
+
+    # Genius lyrics container
+    lyrics_divs = soup.select("div[data-lyrics-container='true']")
+    raw_lyrics = "\n".join(div.get_text(separator="\n") for div in lyrics_divs).strip()
+
+    # Clean up the lyrics text
+    cleaned = re.sub(r"\[.*?\]", "", raw_lyrics)
+    cleaned = re.sub(r"\n{2,}", "\n\n", cleaned).splitlines()[3:]
+    lyrics = "\n".join(cleaned).strip()
+
+    return jsonify(lyrics)
 
 if __name__ == '__main__':
     app.run(debug=True)

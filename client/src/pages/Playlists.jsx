@@ -10,8 +10,9 @@ gsap.registerPlugin(ScrollTrigger);
 
 const Playlists = (selectedPlaylist) => {
   const [playlists, setPlaylists] = useState([]);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState('');
   const [tracks, setTracks] = useState([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState('');
+  const [checkboxType, setCheckboxType] = useState('single');
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [message, setMessage] = useState('');
   const [loadingTracks, setLoadingTracks] = useState(false);
@@ -167,72 +168,77 @@ const Playlists = (selectedPlaylist) => {
         <></>
       )}
 
+      <label htmlFor="type-selector" className='font-bold text-xl'>Move track/group track</label>
+      <input type="checkbox" id='type-selector' className='rounded-lg m-4 p-4 w-28' onClick={() => setCheckboxType(checkboxType === 'single' ? 'group' : 'single')} />
       {loadingTracks ? (
         <Loader />
       ) : tracks.length > 0 ? (
-        <ul className='px-60'>
+        <ul className='px-60 my-24'>
           {tracks.map((trackItem, idx) => (
-            <Track key={`${trackItem.track.id}-${idx}`} index={idx} item={trackItem.track} size={'150'} selectedTracks={selectedTracks} toggleTrackSelection={toggleTrackSelection} />
+            <Track key={`${trackItem.track.id}-${idx}`} index={idx} item={trackItem.track} size={'150'} type={checkboxType} selectedTracks={selectedTracks} toggleTrackSelection={toggleTrackSelection} />
           ))}
         </ul>
       ) : (
         <p className='my-7'>No tracks available</p>
       )}
-      <form
-        onSubmit={moveTracks}
-        className="fixed right-12 top-1/2 -translate-y-1/2 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
-      >
-        <h3 className="text-white text-xl font-bold mb-6">Reorder Tracks</h3>
-        <div className="flex flex-col gap-4 mb-6">
+      {checkboxType === 'single' ? (
+        <form
+          onSubmit={moveTracks}
+          className="fixed right-12 top-1/2 -translate-y-1/2 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
+        >
+          <h3 className="text-white text-xl font-bold mb-6">Reorder Tracks</h3>
+          <div className="flex flex-col gap-4 mb-6">
+            <input
+              type="number"
+              name="origin"
+              placeholder="Origin index"
+              min={0}
+              max={tracks.length - 1}
+              required
+              className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
+            />
+            <input
+              type="number"
+              name="destination"
+              placeholder="Destination index"
+              min={0}
+              max={tracks.length}
+              required
+              className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
+            />
+          </div>
           <input
-            type="number"
-            name="origin"
-            placeholder="Origin index"
-            min={0}
-            max={tracks.length - 1}
-            required
-            className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
+            type="submit"
+            value="Confirm!"
+            className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
           />
-          <input
-            type="number"
-            name="destination"
-            placeholder="Destination index"
-            min={0}
-            max={tracks.length}
-            required
-            className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
-          />
-        </div>
-        <input
-          type="submit"
-          value="Confirm!"
-          className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
-        />
-      </form>
-      <form
-        onSubmit={moveGroupTracks}
-        className="fixed right-12 bottom-12 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
-      >
-        <h3 className="text-white text-xl font-bold mb-6">Move Group</h3>
-        
-        <div className="flex flex-col gap-4 mb-6">
-          <input
-            type="number"
-            name="first_new_position"
-            placeholder="New starting index"
-            min={0}
-            max={tracks.length}
-            required
-            className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
-          />
-        </div>
+        </form>
+      ) : (
+        <form
+          onSubmit={moveGroupTracks}
+          className="fixed right-12 top-1/2 -translate-y-1/2 bg-emerald-800/20 p-8 rounded-2xl shadow-md w-80 backdrop-blur-md z-10"
+        >
+          <h3 className="text-white text-xl font-bold mb-6">Move Group</h3>
+          
+          <div className="flex flex-col gap-4 mb-6">
+            <input
+              type="number"
+              name="first_new_position"
+              placeholder="New starting index"
+              min={0}
+              max={tracks.length}
+              required
+              className="p-3 rounded-lg bg-gray-800 text-white focus:outline-emerald-400"
+            />
+          </div>
 
-        <input
-          type="submit"
-          value="Move Group"
-          className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
-        />
-      </form>
+          <input
+            type="submit"
+            value="Move Group"
+            className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 duration-400 transition-all cursor-pointer"
+          />
+        </form>
+      )}
     </div>
     
   );
