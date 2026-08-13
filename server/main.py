@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, redirect
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyOAuth, SpotifyOauthError
+from spotipy.exceptions import SpotifyException
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
@@ -21,7 +22,31 @@ SCOPE = "user-top-read playlist-read-private playlist-modify-private playlist-mo
 GENIUS_API_KEY = os.getenv('GENIUS_API_KEY')
 GENIUS_CLIENT_ACCESS_TOKEN = os.getenv('GENIUS_CLIENT_ACCESS_TOKEN')
 
-auth_manager = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope=SCOPE, cache_path=".cache")
+auth_manager = SpotifyOAuth(
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    redirect_uri=REDIRECT_URI,
+    scope=SCOPE,
+    cache_path=".cache"
+)
+
+@app.errorhandler(SpotifyOauthError)
+def handle_spotify_oauth_error(e):
+    """
+    Catches token revocation or expiration across all endpoints.
+    Deletes the invalid .cache file and returns a 401 to prompt frontend login.
+    """
+    if os.path.exists(".cache"):
+        try:
+            os.remove(".cache")
+            print("[INFO] Invalid .cache file deleted successfully.")
+        except OSError as err:
+            print(f"[WARNING] Could not delete .cache file: {err}")
+
+    return jsonify({
+        'error': 'invalid_grant',
+        'message': 'Spotify session expired or revoked. Please log in again.'
+    }), 401
 
 @app.route('/login')
 def login():
@@ -31,9 +56,12 @@ def login():
 @app.route('/callback/')
 def callback():
     code = request.args.get('code')
+    if not code:
+        return jsonify({'error': 'Missing code parameter'}), 400
+    
     token_info = auth_manager.get_access_token(code)
     access_token = token_info['access_token']
-    return redirect(f"http://localhost:5173/#access_token={access_token}") # Redirect to React frontend with access token in URL fragment
+    return redirect(f"http://localhost:5173/#access_token={access_token}")
 
 @app.route('/user', methods=['GET'])
 def user():
@@ -50,28 +78,32 @@ def top_tracks():
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
     sp = spotipy.Spotify(auth_manager=auth_manager)
-    top_tracks = sp.current_user_top_tracks(limit=5, time_range='medium_term')['items']
-    seed_tracks = [track['id'] for track in top_tracks if track and 'id' in track]
-
-    top_artists_data = sp.current_user_top_artists(limit=5, time_range='medium_term')['items']
-    seed_artists = [artist['id'] for artist in top_artists_data if artist and 'id' in artist]
-
-    available_genres = sp.recommendation_genre_seeds()
-    seed_genres = random.choice(available_genres) # Pick a random genre or define one
-
-    print('tracks: ', seed_tracks)
-    print('artists: ', seed_artists)
-    print('genres: ', seed_genres)
-
-    if len(seed_tracks) == 0:
-        return jsonify({'error': 'No valid seed tracks found'}), 400
-
+    
     try:
-        recs = sp.recommendations(seed_tracks=seed_tracks[:2], seed_genres=seed_genres[:1], seed_artists=seed_artists[:2], limit=10)['tracks']
+        top_tracks_data = sp.current_user_top_tracks(limit=5, time_range='medium_term')['items']
+        seed_tracks = [track['id'] for track in top_tracks_data if track and 'id' in track]
+
+        top_artists_data = sp.current_user_top_artists(limit=5, time_range='medium_term')['items']
+        seed_artists = [artist['id'] for artist in top_artists_data if artist and 'id' in artist]
+
+        available_genres_res = sp.recommendation_genre_seeds()
+        available_genres = available_genres_res.get('genres', [])
+        seed_genres = [random.choice(available_genres)] if available_genres else []
+
+        if not seed_tracks and not seed_artists and not seed_genres:
+            return jsonify({'error': 'No valid seed data found'}), 400
+
+        recs = sp.recommendations(
+            seed_tracks=seed_tracks[:2], 
+            seed_genres=seed_genres[:1], 
+            seed_artists=seed_artists[:2], 
+            limit=10
+        )['tracks']
         return jsonify(recs)
-    except spotipy.exceptions.SpotifyException as e:
-        print(e)
-        return jsonify({'error': 'Failed to get recommendations'}), 500
+        
+    except SpotifyException as e:
+        print(f"Spotify API Error: {e}")
+        return jsonify({'error': 'Failed to get recommendations', 'details': str(e)}), 500
 
 @app.route('/playlists', methods=['GET'])
 def playlists():
@@ -82,7 +114,6 @@ def playlists():
 @app.route('/playlists/<playlist_id>/tracks', methods=['GET'])
 def playlist_tracks(playlist_id):
     sp = spotipy.Spotify(auth_manager=auth_manager)
-
     tracks = []
     offset = 0
 
@@ -102,23 +133,23 @@ def playlist_tracks(playlist_id):
 
 @app.route('/playlists/<playlist_id>/moveTracks', methods=['POST'])
 def move_tracks(playlist_id):
-    data = request.json
+    data = request.json or {}
     origin = data.get('origin')
     destination = data.get('destination')
     sp = spotipy.Spotify(auth_manager=auth_manager)
 
     try:
         sp.playlist_reorder_items(playlist_id, range_start=origin, insert_before=destination)
-        return jsonify('Tracks moved successfully!')
-    except spotipy.exceptions.SpotifyException as e:
-        return jsonify('Failed to move tracks!', e)
-    
+        return jsonify({'message': 'Tracks moved successfully!'})
+    except SpotifyException as e:
+        return jsonify({'error': 'Failed to move tracks!', 'details': str(e)}), 500
+
 @app.route('/playlists/<playlist_id>/moveGroupTracks', methods=['POST'])
 def move_group_tracks(playlist_id):
-    data = request.json
-    first_new_position = data.get('first_new_position') # The position where to "fit" the group of tracks
-    first_old_position = data.get('first_old_position') # The first position of the whole group of tracks
-    group_tracks = data.get('group_tracks') # All the tracks
+    data = request.json or {}
+    first_new_position = data.get('first_new_position')
+    first_old_position = data.get('first_old_position')
+    group_tracks = data.get('group_tracks', [])
     sp = spotipy.Spotify(auth_manager=auth_manager)
 
     try:
@@ -128,11 +159,10 @@ def move_group_tracks(playlist_id):
             range_length=len(group_tracks),
             insert_before=first_new_position
         )
-
-        return jsonify('Track moved successfully')
-    except spotipy.exceptions.SpotifyException as e:
+        return jsonify({'message': 'Track moved successfully'})
+    except SpotifyException as e:
         print(e)
-        return jsonify(f'Failed to move group tracks: {str(e)}'), 500
+        return jsonify({'error': 'Failed to move group tracks', 'details': str(e)}), 500
 
 @app.route("/lyrics", methods=["GET"])
 def display_lyrics():
@@ -144,15 +174,16 @@ def display_lyrics():
     
     query = f"{track} {artist}"
 
-    res = requests.get("https://api.genius.com/search",
+    res = requests.get(
+        "https://api.genius.com/search",
         params={"q": query},
         headers={"Authorization": f"Bearer {GENIUS_CLIENT_ACCESS_TOKEN}"}
     ).json()
 
-    hits = res["response"]["hits"]
+    hits = res.get("response", {}).get("hits", [])
 
     if not hits:
-        return None
+        return jsonify({"error": "Song not found on Genius"}), 404
 
     data = hits[0]["result"]
 
@@ -163,17 +194,12 @@ def display_lyrics():
         "artist": data["primary_artist"]["name"]
     }
 
-    if not song:
-        return jsonify({"error": "Song not found on Genius"}), 404
-
     page = requests.get(song["url"])
     soup = BeautifulSoup(page.text, "html.parser")
 
-    # Genius lyrics container
     lyrics_divs = soup.select("div[data-lyrics-container='true']")
     raw_lyrics = "\n".join(div.get_text(separator="\n") for div in lyrics_divs).strip()
 
-    # Clean up the lyrics text
     cleaned = re.sub(r"\[.*?\]", "", raw_lyrics)
     cleaned = re.sub(r"\n{2,}", "\n\n", cleaned).splitlines()[3:]
     lyrics = "\n".join(cleaned).strip()
