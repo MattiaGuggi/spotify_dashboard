@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Mic2, X, Music, CheckSquare, Square } from 'lucide-react';
 
-const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [], toggleTrackSelection, }) => {
+const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [], toggleTrackSelection }) => {
   const pathname = window.location.pathname;
   const [open, setOpen] = useState(false);
   const [lyrics, setLyrics] = useState('');
