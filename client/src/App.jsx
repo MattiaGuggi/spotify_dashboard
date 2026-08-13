@@ -22,14 +22,23 @@ function App() {
   return (
     <UserProvider>
       <Router>
-        <Navbar />
-        <div className="relative w-full min-h-screen pt-16 text-white font-sans bg-gradient-to-br from-[#121212] via-[#1DB954]/20 to-[#191414]">
-          <Routes>
-            <Route path="/" element={<Home setSelectedPlaylist={setSelectedPlaylist} />} />
-            <Route path="/top-tracks" element={<TopTracks />} />
-            <Route path="/playlists" element={<Playlists selectedPlaylist={selectedPlaylist} />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
+        <div className="relative min-h-screen w-full bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500 selection:text-black antialiased overflow-x-hidden">
+          {/* Ambient Background Glows */}
+          <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.12),rgba(255,255,255,0))] pointer-events-none z-0" />
+          <div className="fixed -bottom-32 -left-32 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none z-0" />
+
+          {/* Floating Glass Navbar */}
+          <Navbar />
+
+          {/* Main Content Area */}
+          <main className="relative z-10 pt-24 pb-16">
+            <Routes>
+              <Route path="/" element={<Home setSelectedPlaylist={setSelectedPlaylist} />} />
+              <Route path="/top-tracks" element={<TopTracks />} />
+              <Route path="/playlists" element={<Playlists selectedPlaylist={selectedPlaylist} />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </main>
         </div>
       </Router>
     </UserProvider>

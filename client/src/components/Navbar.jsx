@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Home, Flame, ListMusic, Settings, Disc3 } from 'lucide-react';
 
 const navItems = [
-  { label: 'Home', path: '' },
-  { label: 'Top Tracks', path: 'top-tracks' },
-  { label: 'Playlists', path: 'playlists' },
-  { label: 'Settings', path: 'settings' },
+  { label: 'Home', path: '', icon: Home },
+  { label: 'Top Tracks', path: 'top-tracks', icon: Flame },
+  { label: 'Playlists', path: 'playlists', icon: ListMusic },
+  { label: 'Settings', path: 'settings', icon: Settings },
 ];
 
 const Navbar = () => {
@@ -14,7 +15,7 @@ const Navbar = () => {
   const [activeOption, setActiveOption] = useState('');
 
   useEffect(() => {
-    const current = location.pathname.split('/')[1];
+    const current = location.pathname.split('/')[1] || '';
     setActiveOption(current);
   }, [location]);
 
@@ -23,19 +24,40 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-20 h-16 px-10 flex items-center justify-center gap-12 backdrop-blur-md bg-gradient-to-tr from-black/70 via-emerald-700/60 to-black/80 shadow-md">
-      {navItems.map(({ label, path }) => (
-        <button
-          key={path}
-          onClick={() => redirectToPage(path)}
-          className={`text-white uppercase font-medium tracking-wide transition-all duration-300 hover:text-emerald-400 hover:scale-105 ${
-            activeOption === path ? 'text-emerald-300 underline underline-offset-4' : 'opacity-70'
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </nav>
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-4xl">
+      <nav className="flex items-center justify-between px-6 py-3 rounded-full bg-zinc-900/60 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50">
+        {/* Brand Badge */}
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => redirectToPage('')}>
+          <div className="p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <Disc3 className="w-5 h-5 animate-spin-slow" />
+          </div>
+          <span className="font-bold text-sm tracking-wider uppercase bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent hidden sm:inline-block">
+            SoundPulse
+          </span>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {navItems.map(({ label, path, icon: Icon }) => {
+            const isActive = activeOption === path;
+            return (
+              <button
+                key={path}
+                onClick={() => redirectToPage(path)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/10'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-zinc-400'}`} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </header>
   );
 };
 
