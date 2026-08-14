@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <body className="bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500 selection:text-black antialiased overflow-x-hidden min-h-screen">
+      <body className="bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500 selection:text-black antialiased overflow-x-hidden min-h-screen" suppressHydrationWarning>
         <UserProvider>
           <div className="relative min-h-screen w-full">
             {/* Ambient Background Glows */}
