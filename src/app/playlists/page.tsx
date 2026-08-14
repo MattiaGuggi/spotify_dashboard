@@ -1,42 +1,73 @@
-import { useEffect, useState, useRef } from 'react';
+'use client';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import Track from '../components/Track';
-import Loader from '../components/Loader';
+import Track from '../../components/Track';
+import Loader from '../../components/Loader';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Layers, Move, ChevronDown, ListOrdered, CheckCircle2, AlertCircle, Check, Disc3 } from 'lucide-react';
+import {
+  Layers,
+  Move,
+  ChevronDown,
+  ListOrdered,
+  CheckCircle2,
+  AlertCircle,
+  Check,
+  Disc3,
+} from 'lucide-react';
+import { playlistType, trackType } from '../../lib/types';
+import { useUser } from '@/src/context/UserContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Playlists = (selectedPlaylist) => {
-  const [playlists, setPlaylists] = useState([]);
-  const [tracks, setTracks] = useState([]);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState('');
-  const [checkboxType, setCheckboxType] = useState('single');
-  const [selectedTracks, setSelectedTracks] = useState([]);
-  const [message, setMessage] = useState('');
-  const [loadingTracks, setLoadingTracks] = useState(false);
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-  // Custom Select Dropdown State & Ref
-  const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const dropdownRef = useRef(null);
+interface PlaylistsProps {
+  selectedPlaylist?: {
+    id?: string;
+  };
+}
 
-  const fetchPlaylists = async () => {
+interface PlaylistTrackItem {
+  track: trackType;
+}
+
+type CheckboxType = 'single' | 'group';
+
+const Page: React.FC<PlaylistsProps> = () => {
+  const [playlists, setPlaylists] = useState<playlistType[]>([]);
+  const [tracks, setTracks] = useState<PlaylistTrackItem[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
+  const [checkboxType, setCheckboxType] = useState<CheckboxType>('single');
+  const [selectedTracks, setSelectedTracks] = useState<number[]>([]);
+  const [message, setMessage] = useState<string>('');
+  const [loadingTracks, setLoadingTracks] = useState<boolean>(false);
+  const { selectedPlaylist } = useUser();
+
+  // Custom Select Dropdown State & Ref typed as HTMLDivElement
+  const [isSelectOpen, setIsSelectOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const fetchPlaylists = async (): Promise<void> => {
     try {
-      const response = await axios.get('http://localhost:5000/playlists', { withCredentials: true });
+      const response = await axios.get<playlistType[]>(`${API_URL}/playlists`, {
+        withCredentials: true,
+      });
       setPlaylists(response.data || []);
     } catch (error) {
       console.error('Failed to fetch playlists', error);
     }
   };
 
-  const fetchTracks = async () => {
+  const fetchTracks = async (): Promise<void> => {
     try {
       setLoadingTracks(true);
-      const response = await axios.get(`http://localhost:5000/playlists/${selectedPlaylistId}/tracks`, {
-        withCredentials: true,
-      });
+      const response = await axios.get<PlaylistTrackItem[]>(
+        `${API_URL}/playlists/${selectedPlaylistId}/tracks`,
+        { withCredentials: true }
+      );
       setTracks(response.data || []);
     } catch (error) {
       console.error('Failed to fetch tracks', error);
@@ -46,16 +77,23 @@ const Playlists = (selectedPlaylist) => {
     }
   };
 
-  const moveTracks = async (e) => {
+  const moveTracks = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    const target = e.currentTarget as typeof e.currentTarget & {
+      origin: HTMLInputElement;
+      destination: HTMLInputElement;
+    };
+
     try {
-      const origin = Number(e.target.origin.value);
-      const destination = Number(e.target.destination.value);
-      const response = await axios.post(
-        `http://localhost:5000/playlists/${selectedPlaylistId}/moveTracks`,
+      const origin = Number(target.origin.value) - 1;
+      const destination = Number(target.destination.value) - 1;
+
+      const response = await axios.post<string>(
+        `${API_URL}/playlists/${selectedPlaylistId}/moveTracks`,
         { origin, destination },
         { withCredentials: true }
       );
+
       setMessage(typeof response.data === 'string' ? response.data : 'Tracks moved successfully!');
       fetchTracks();
     } catch (err) {
@@ -63,27 +101,33 @@ const Playlists = (selectedPlaylist) => {
     }
   };
 
-  const toggleTrackSelection = (index) => {
+  const toggleTrackSelection = (index: number): void => {
     setSelectedTracks((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
   };
 
-  const moveGroupTracks = async (e) => {
+  const moveGroupTracks = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (selectedTracks.length === 0) {
       setMessage('Please select at least one track.');
       return;
     }
 
+    const target = e.currentTarget as typeof e.currentTarget & {
+      first_new_position: HTMLInputElement;
+    };
+
     try {
-      const first_new_position = Number(e.target.first_new_position.value);
+      const first_new_position = Number(target.first_new_position.value);
       const sortedSelected = [...selectedTracks].sort((a, b) => a - b);
       const first_old_position = sortedSelected[0];
-      const group_tracks = sortedSelected.map((i) => tracks[i].track);
+      const group_tracks = sortedSelected
+        .map((i) => tracks[i]?.track)
+        .filter(Boolean);
 
-      const response = await axios.post(
-        `http://localhost:5000/playlists/${selectedPlaylistId}/moveGroupTracks`,
+      const response = await axios.post<string>(
+        `${API_URL}/playlists/${selectedPlaylistId}/moveGroupTracks`,
         { first_new_position, first_old_position, group_tracks },
         { withCredentials: true }
       );
@@ -91,7 +135,7 @@ const Playlists = (selectedPlaylist) => {
       setMessage(typeof response.data === 'string' ? response.data : 'Group moved successfully!');
       setSelectedTracks([]);
       fetchTracks();
-      e.target.first_new_position.value = '';
+      target.first_new_position.value = '';
     } catch (err) {
       console.error('Failed to move group of tracks', err);
     }
@@ -99,18 +143,18 @@ const Playlists = (selectedPlaylist) => {
 
   useEffect(() => {
     fetchPlaylists();
-    setSelectedPlaylistId(selectedPlaylist?.selectedPlaylist?.id || '');
-  }, []);
+    setSelectedPlaylistId(selectedPlaylist?.id || '');
+  }, [selectedPlaylist?.id]);
 
   useEffect(() => {
     if (!selectedPlaylistId) return;
     fetchTracks();
   }, [selectedPlaylistId]);
 
-  // Handle clicking outside the custom dropdown to close it
+  // Handle clicking outside the custom dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsSelectOpen(false);
       }
     };
@@ -118,42 +162,49 @@ const Playlists = (selectedPlaylist) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useGSAP(() => {
-    const trackElements = gsap.utils.toArray('ul li');
+  // GSAP animation safely scoped to containerRef
+  useGSAP(
+    () => {
+      if (!containerRef.current) return;
+      const trackElements = gsap.utils.toArray<HTMLElement>('ul li', containerRef.current);
 
-    trackElements.forEach((track) => {
-      gsap.fromTo(
-        track,
-        { opacity: 0, scale: 0.9, y: 40 },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: track,
-            start: 'top 95%',
-            end: 'bottom 85%',
-            scrub: 0.5,
-          },
-        }
-      );
-    });
-  }, [tracks]);
+      trackElements.forEach((track) => {
+        gsap.fromTo(
+          track,
+          { opacity: 0, scale: 0.9, y: 40 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: track,
+              start: 'top 95%',
+              end: 'bottom 85%',
+              scrub: 0.5,
+            },
+          }
+        );
+      });
+    },
+    { dependencies: [tracks], scope: containerRef }
+  );
 
-  // Find currently selected playlist name for trigger display
   const currentSelectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
 
   return (
-    <div className="px-6 sm:px-12 md:px-16 lg:px-24 max-w-7xl mx-auto flex flex-col items-center">
+    <div ref={containerRef} className="px-6 sm:px-12 md:px-16 lg:px-24 max-w-7xl mx-auto flex flex-col items-center">
       <div className="w-full text-center max-w-2xl mb-10">
-        <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">Playlist Manager</h2>
-        <p className="text-zinc-400 text-sm">Select a playlist and customize track positions individually or in bulk</p>
+        <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">
+          Playlist Manager
+        </h2>
+        <p className="text-zinc-400 text-sm">
+          Select a playlist and customize track positions individually or in bulk
+        </p>
       </div>
 
-      {/* Custom Ultra-Modern Dropdown */}
+      {/* Custom Dropdown */}
       <div className="relative w-full max-w-md mb-8 z-30" ref={dropdownRef}>
-        {/* Trigger Button */}
         <button
           type="button"
           onClick={() => setIsSelectOpen((prev) => !prev)}
@@ -164,9 +215,13 @@ const Playlists = (selectedPlaylist) => {
           }`}
         >
           <div className="flex items-center gap-3 truncate">
-            <Disc3 className={`w-4 h-4 shrink-0 ${currentSelectedPlaylist ? 'text-emerald-400' : 'text-zinc-500'}`} />
+            <Disc3
+              className={`w-4 h-4 shrink-0 ${
+                currentSelectedPlaylist ? 'text-emerald-400' : 'text-zinc-500'
+              }`}
+            />
             <span className={currentSelectedPlaylist ? 'text-white font-semibold' : 'text-zinc-400'}>
-              {currentSelectedPlaylist ? currentSelectedPlaylist.name : 'Select a playlist...'}
+              {currentSelectedPlaylist?.name || 'Select a playlist...'}
             </span>
           </div>
           <ChevronDown
@@ -176,7 +231,6 @@ const Playlists = (selectedPlaylist) => {
           />
         </button>
 
-        {/* Custom Styled Floating Options List */}
         {isSelectOpen && (
           <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-zinc-900/95 border border-white/10 shadow-2xl backdrop-blur-2xl overflow-hidden z-50 max-h-64 overflow-y-auto [scrollbar-color:#3f3f46_transparent] animate-in fade-in zoom-in-95 duration-150">
             <div className="p-1.5 flex flex-col gap-1">
@@ -190,7 +244,7 @@ const Playlists = (selectedPlaylist) => {
                       key={playlist.id}
                       type="button"
                       onClick={() => {
-                        setSelectedPlaylistId(playlist.id);
+                        if (playlist.id) setSelectedPlaylistId(playlist.id);
                         setIsSelectOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm text-left transition-all duration-200 ${
@@ -218,7 +272,7 @@ const Playlists = (selectedPlaylist) => {
         </div>
       )}
 
-      {/* Segmented Mode Control Switch */}
+      {/* Mode Control Switch */}
       <div className="flex items-center gap-2 p-1.5 bg-zinc-900/80 border border-white/10 rounded-xl mb-12 shadow-lg backdrop-blur-md">
         <button
           type="button"
@@ -259,7 +313,7 @@ const Playlists = (selectedPlaylist) => {
                 key={`${trackItem.track?.id || 'track'}-${idx}`}
                 index={idx}
                 item={trackItem.track}
-                size="64"
+                size={'64'}
                 type={checkboxType}
                 selectedTracks={selectedTracks}
                 toggleTrackSelection={toggleTrackSelection}
@@ -290,8 +344,8 @@ const Playlists = (selectedPlaylist) => {
                     type="number"
                     name="origin"
                     placeholder="e.g. 0"
-                    min={0}
-                    max={tracks.length - 1}
+                    min={1}
+                    max={tracks.length}
                     required
                     className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-800/80 border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500"
                   />
@@ -302,7 +356,7 @@ const Playlists = (selectedPlaylist) => {
                     type="number"
                     name="destination"
                     placeholder="e.g. 5"
-                    min={0}
+                    min={1}
                     max={tracks.length}
                     required
                     className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-800/80 border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500"
@@ -355,4 +409,4 @@ const Playlists = (selectedPlaylist) => {
   );
 };
 
-export default Playlists;
+export default Page;

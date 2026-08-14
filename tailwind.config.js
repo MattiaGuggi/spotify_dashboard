@@ -1,6 +1,5 @@
-/* eslint-disable no-undef */
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
@@ -10,9 +9,10 @@ export default {
         'custom': '0 0 8px rgba(0, 0, 0, 0.2)',
       },
       screens: {
-        xs: { min: '320px', max: '480px' },
-        sm: { min: '480px', max: '768px' },
-        md: { min: '768px', max: '1024px' },
+        xs: '320px',
+        sm: '480px',
+        md: '768px',
+        lg: '1024px',
       },
     },
   },

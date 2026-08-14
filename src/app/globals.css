@@ -1,16 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.js";
 
-* {
+/* Reset html and body to replace old #root behavior */
+html,
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-#root {
-  height: 100lvh;
-  width: 100%;
+  background-color: #09090b;
+  color: #f4f4f5;
 }
 
 input[type='number']::-webkit-outer-spin-button,
@@ -26,20 +27,24 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent; /* Removes white background */
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46; /* Dark gray (zinc-700) */
+  background: #3f3f46;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b; /* Slightly lighter gray on hover (zinc-600) */
+  background: #52525b;
 }
 
 /* Firefox support */
 * {
   scrollbar-width: thin;
   scrollbar-color: #3f3f46 transparent;
+}
+
+button {
+  cursor: pointer;
 }

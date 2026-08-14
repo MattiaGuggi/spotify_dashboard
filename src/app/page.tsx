@@ -1,19 +1,21 @@
+'use client'
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../components/UserContext';
+import { useRouter } from 'next/navigation';
+import { useUser } from '../context/UserContext';
 import { Play, Music2, User as UserIcon } from 'lucide-react';
+import { playlistType } from '../lib/types';
 
-const Home = ({ setSelectedPlaylist }) => {
-  const navigate = useNavigate();
-  const [playlists, setPlaylists] = useState([]);
-  const { user, setUser } = useUser();
+const Page = () => {
+  const router = useRouter();
+  const [playlists, setPlaylists] = useState<playlistType[]>([]);
+  const { user, setUser, setSelectedPlaylist } = useUser();
 
   const fetchData = async () => {
     try {
       const [playlistsRes, userRes] = await Promise.all([
-        axios.get('http://localhost:5000/playlists', { withCredentials: true }),
-        axios.get('http://localhost:5000/user', { withCredentials: true }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists`, { withCredentials: true }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user`, { withCredentials: true }),
       ]);
       setPlaylists(playlistsRes.data || []);
       setUser(userRes.data || {});
@@ -22,9 +24,9 @@ const Home = ({ setSelectedPlaylist }) => {
     }
   };
 
-  const handleClick = (playlist) => {
+  const handleClick = (playlist: { id?: string }) => {
     setSelectedPlaylist(playlist);
-    navigate('/playlists');
+    router.push('/playlists');
   };
 
   useEffect(() => {
@@ -103,4 +105,4 @@ const Home = ({ setSelectedPlaylist }) => {
   );
 };
 
-export default Home;
+export default Page;

@@ -1,7 +1,8 @@
-import { useUser } from '../components/UserContext';
-import { User, Settings as SettingsIcon, ShieldCheck, Music } from 'lucide-react';
+'use client'
+import { useUser } from '../../context/UserContext';
+import { User, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
 
-const Settings = () => {
+const Page = () => {
   const { user } = useUser();
 
   return (
@@ -54,4 +55,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default Page;

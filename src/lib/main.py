@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
@@ -61,7 +61,7 @@ def callback():
     
     token_info = auth_manager.get_access_token(code)
     access_token = token_info['access_token']
-    return redirect(f"http://localhost:5173/#access_token={access_token}")
+    return redirect(f"http://localhost:3000/#access_token={access_token}")
 
 @app.route('/user', methods=['GET'])
 def user():

@@ -1,21 +1,24 @@
+'use client'
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import Track from '../components/Track';
-import Loader from '../components/Loader';
+import Track from '../../components/Track';
+import Loader from '../../components/Loader';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Flame, AlertCircle } from 'lucide-react';
+import { trackType } from '@/src/lib/types';
 
-const TopTracks = () => {
-  const [tracks, setTracks] = useState([]);
-  const [loading, setLoading] = useState(true);
+const Page = () => {
+  const [tracks, setTracks] = useState<trackType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchTopTracks = async () => {
       try {
         setLoading(true);
-        const res = await axios.get('http://localhost:5000/top-tracks', { withCredentials: true });
-        setTracks(res.data.items || res.data || []);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/top-tracks`, { withCredentials: true });
+        const trackArray = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        setTracks(trackArray);
       } catch (error) {
         console.error('Failed to fetch top tracks', error);
       } finally {
@@ -74,4 +77,4 @@ const TopTracks = () => {
   );
 };
 
-export default TopTracks;
+export default Page;

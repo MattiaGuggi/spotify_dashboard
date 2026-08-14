@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+'use client'
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Home, Flame, ListMusic, Settings, Disc3 } from 'lucide-react';
 
 const navItems = [
@@ -10,17 +11,17 @@ const navItems = [
 ];
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [activeOption, setActiveOption] = useState('');
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activeOption, setActiveOption] = useState<string>('');
 
   useEffect(() => {
-    const current = location.pathname.split('/')[1] || '';
+    const current = pathname.split('/')[1] || '';
     setActiveOption(current);
-  }, [location]);
+  }, [pathname]);
 
-  const redirectToPage = (page) => {
-    navigate(`/${page}`);
+  const redirectToPage = (page: string) => {
+    router.push(`/${page}`);
   };
 
   return (
@@ -31,7 +32,7 @@ const Navbar = () => {
           <div className="p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             <Disc3 className="w-5 h-5 animate-spin-slow" />
           </div>
-          <span className="font-bold text-sm tracking-wider uppercase bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent hidden sm:inline-block">
+          <span className="font-bold text-sm tracking-wider uppercase bg-linear-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent hidden sm:inline-block">
             SoundPulse
           </span>
         </div>

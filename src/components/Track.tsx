@@ -1,11 +1,22 @@
+'use client'
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Mic2, X, Music, CheckSquare, Square } from 'lucide-react';
+import { trackType } from '../lib/types';
 
-const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [], toggleTrackSelection }) => {
+type TrackProps = {
+  index: number;
+  item: trackType;
+  size?: string;
+  type?: string;
+  selectedTracks?: number[];
+  toggleTrackSelection?: (index: number) => void;
+}
+
+const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [], toggleTrackSelection } : TrackProps) => {
   const pathname = window.location.pathname;
-  const [open, setOpen] = useState(false);
-  const [lyrics, setLyrics] = useState('');
+  const [open, setOpen] = useState<boolean>(false);
+  const [lyrics, setLyrics] = useState<string>('');
   const isSelected = selectedTracks.includes(index);
 
   const showLyrics = () => {
@@ -14,7 +25,7 @@ const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [],
 
   const fetchLyrics = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/lyrics', {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/lyrics`, {
         params: {
           track: item?.name,
           artist: item?.album?.artists?.[0]?.name,
@@ -58,7 +69,7 @@ const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [],
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition"
+                className="p-2 cursor-pointer rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -124,7 +135,7 @@ const Track = ({ index, item, size = '64', type = 'single', selectedTracks = [],
         {/* Lyrics Button Action */}
         <button
           onClick={showLyrics}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 text-zinc-400 hover:text-emerald-400 transition text-xs font-medium shrink-0 ml-4"
+          className="flex cursor-pointer items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 text-zinc-400 hover:text-emerald-400 transition text-xs font-medium shrink-0 ml-4"
         >
           <Mic2 className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Lyrics</span>
